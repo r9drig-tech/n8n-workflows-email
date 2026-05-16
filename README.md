@@ -75,7 +75,7 @@ n8n-workflows-email/
 **Rodrigo Salgado**  
 Analista de Power BI, Dados & IA | Em transição para Engenheiro de Dados & IA
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/SEU-PERFIL)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/r9drig-power-bi)
 [![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white)](https://github.com/r9drig-tech)
 
 ---
