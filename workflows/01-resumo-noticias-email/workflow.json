@@ -1,5 +1,5 @@
 {
-  "name": "Alerta de Ações com IA — 19h Dias Úteis",
+  "name": "Treinamento_Pós",
   "nodes": [
     {
       "parameters": {
@@ -12,72 +12,74 @@
           ]
         }
       },
-      "id": "a1000001-0001-0001-0001-000000000001",
+      "id": "eb80eb13-2c30-491e-8848-c2091d59bbba",
       "name": "19h Dias Úteis (Seg-Sex)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [250, 300]
+      "position": [
+        10112,
+        1152
+      ]
     },
     {
       "parameters": {
-        "operation": "readRows",
         "documentId": {
           "__rl": true,
-          "value": "ID_DA_PLANILHA",
-          "mode": "id"
+          "value": "16Pk6aoYv87kVPZ9r4ej8E4QDrWHneYyh3U8oGZ5H814",
+          "mode": "list",
+          "cachedResultName": "dados_de_vendas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16Pk6aoYv87kVPZ9r4ej8E4QDrWHneYyh3U8oGZ5H814/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "Tickers",
+          "value": 846087251,
           "mode": "list",
-          "cachedResultName": "Tickers"
+          "cachedResultName": "Tickers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16Pk6aoYv87kVPZ9r4ej8E4QDrWHneYyh3U8oGZ5H814/edit#gid=846087251"
         },
         "options": {}
       },
-      "id": "a1000002-0002-0002-0002-000000000002",
+      "id": "5fdf9b7a-64d8-4c2f-9de6-64065fce9fad",
       "name": "Ler Tickers do Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [500, 300],
+      "position": [
+        10352,
+        1152
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "CREDENTIAL_ID",
-          "name": "Google Sheets account"
+          "id": "jLcskVFTqXoBizhs",
+          "name": "Google Sheets OAuth2 API"
         }
       }
     },
     {
       "parameters": {
-        "batchSize": 1,
+        "url": "=https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={{ $json.ticker }}&apikey=YY9Q2YFIYO5I1VW5",
         "options": {}
       },
-      "id": "a1000003-0003-0003-0003-000000000003",
-      "name": "Loop por Ticker",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [750, 300]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "=https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={{ $json.ticker }}&apikey=SUA_ALPHA_VANTAGE_KEY",
-        "options": {}
-      },
-      "id": "a1000004-0004-0004-0004-000000000004",
+      "id": "4017a2d5-c80a-4185-8cf0-dbd8194f82c4",
       "name": "Buscar Cotação Alpha Vantage",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1000, 300]
+      "position": [
+        10880,
+        1200
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Extrai preço atual e calcula variação percentual em relação ao preço de referência\nconst item = $input.first();\nconst quote = item.json['Global Quote'];\n\nconst ticker = $('Loop por Ticker').item.json.ticker;\nconst precoRef = parseFloat($('Loop por Ticker').item.json.preco_referencia);\nconst precoAtual = parseFloat(quote['05. price']);\nconst variacaoAbs = precoAtual - precoRef;\nconst variacaoPerc = ((precoAtual - precoRef) / precoRef) * 100;\n\nreturn [{\n  json: {\n    ticker: ticker,\n    preco_referencia: precoRef,\n    preco_atual: precoAtual,\n    variacao_abs: parseFloat(variacaoAbs.toFixed(2)),\n    variacao_perc: parseFloat(variacaoPerc.toFixed(2)),\n    sinal: variacaoPerc >= 0 ? '📈' : '📉',\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// Extrai preço atual e calcula variação percentual em relação ao preço de referência\nconst item = $input.first();\nconst quote = item.json['Global Quote'];\n\nconst ticker = $('Loop Over Items').item.json.ticker;\nconst precoRef = parseFloat($('Loop Over Items').item.json.preco_referencia);\nconst precoAtual = parseFloat(quote['05. price']);\nconst variacaoAbs = precoAtual - precoRef;\nconst variacaoPerc = ((precoAtual - precoRef) / precoRef) * 100;\n\nreturn [{\n  json: {\n    ticker: ticker,\n    preco_referencia: precoRef,\n    preco_atual: precoAtual,\n    variacao_abs: parseFloat(variacaoAbs.toFixed(2)),\n    variacao_perc: parseFloat(variacaoPerc.toFixed(2)),\n    sinal: variacaoPerc >= 0 ? '📈' : '📉',\n    timestamp: new Date().toISOString()\n  }\n}];"
       },
-      "id": "a1000005-0005-0005-0005-000000000005",
+      "id": "0efb2d3f-b895-4b7a-bab2-18087142bb00",
       "name": "Calcular Variação Percentual",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1250, 300]
+      "position": [
+        11104,
+        1152
+      ]
     },
     {
       "parameters": {
@@ -85,7 +87,8 @@
           "options": {
             "caseSensitive": false,
             "leftValue": "",
-            "typeValidation": "loose"
+            "typeValidation": "loose",
+            "version": 1
           },
           "conditions": [
             {
@@ -102,94 +105,61 @@
         },
         "options": {}
       },
-      "id": "a1000006-0006-0006-0006-000000000006",
+      "id": "c436ee79-d3ea-453a-929e-64a46609dec5",
       "name": "Variação > 3% ou < -3%?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1500, 300]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "=https://newsapi.org/v2/everything?q={{ encodeURIComponent($json.ticker) }}&language=pt&sortBy=publishedAt&pageSize=5&apiKey=SUA_NEWSAPI_KEY",
-        "options": {}
-      },
-      "id": "a1000007-0007-0007-0007-000000000007",
-      "name": "Buscar Notícias (NewsAPI)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1750, 150]
+      "position": [
+        11360,
+        1152
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Formata as notícias para enviar ao ChatGPT\nconst item = $input.first();\nconst articles = item.json.articles || [];\n\nconst ticker = $('Calcular Variação Percentual').item.json.ticker;\nconst variacaoPerc = $('Calcular Variação Percentual').item.json.variacao_perc;\nconst precoAtual = $('Calcular Variação Percentual').item.json.preco_atual;\nconst precoRef = $('Calcular Variação Percentual').item.json.preco_referencia;\nconst sinal = $('Calcular Variação Percentual').item.json.sinal;\n\nconst noticias = articles\n  .slice(0, 5)\n  .map((a, i) => `${i + 1}. ${a.title}\\n   Fonte: ${a.source?.name || 'N/A'}\\n   ${a.description || ''}`)\n  .join('\\n\\n');\n\nconst promptAnalise = `Você é um analista financeiro especializado em mercado de capitais brasileiro. Analise as notícias abaixo referentes à ação ${ticker} e responda EXATAMENTE neste formato JSON (sem markdown, sem texto fora do JSON):\n\n{\n  \"sentimento\": \"POSITIVO\" ou \"NEUTRO\" ou \"NEGATIVO\",\n  \"confianca\": numero de 0 a 100,\n  \"resumo_noticias\": \"resumo em 2-3 frases das principais notícias\",\n  \"correlacao_preco\": \"explicação em 1-2 frases correlacionando o sentimento das notícias com a variação de ${variacaoPerc > 0 ? '+' : ''}${variacaoPerc}% observada no preço\",\n  \"principais_fatores\": [\"fator 1\", \"fator 2\", \"fator 3\"]\n}\n\nContexto do preço:\n- Ticker: ${ticker}\n- Preço de referência: R$ ${precoRef}\n- Preço atual: R$ ${precoAtual}\n- Variação: ${sinal} ${variacaoPerc > 0 ? '+' : ''}${variacaoPerc}%\n\nNotícias encontradas:\n${noticias || 'Nenhuma notícia encontrada para este ticker.'}`;\n\nreturn [{\n  json: {\n    ticker,\n    variacao_perc: variacaoPerc,\n    preco_atual: precoAtual,\n    preco_ref: precoRef,\n    sinal,\n    noticias_raw: noticias,\n    prompt_analise: promptAnalise,\n    timestamp: $('Calcular Variação Percentual').item.json.timestamp\n  }\n}];"
       },
-      "id": "a1000008-0008-0008-0008-000000000008",
+      "id": "15988684-4e4d-4916-bc7d-3f01118e0950",
       "name": "Preparar Prompt de Análise",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2000, 150]
-    },
-    {
-      "parameters": {
-        "resource": "chat",
-        "operation": "complete",
-        "model": "gpt-4o",
-        "messages": {
-          "values": [
-            {
-              "role": "system",
-              "content": "Você é um analista financeiro especializado em mercado de capitais. Sempre responda APENAS com JSON válido, sem markdown, sem texto fora do JSON."
-            },
-            {
-              "role": "user",
-              "content": "={{ $json.prompt_analise }}"
-            }
-          ]
-        },
-        "options": {
-          "temperature": 0.3
-        }
-      },
-      "id": "a1000009-0009-0009-0009-000000000009",
-      "name": "ChatGPT — Análise de Sentimento",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.8,
-      "position": [2250, 150],
-      "credentials": {
-        "openAiApi": {
-          "id": "CREDENTIAL_ID",
-          "name": "OpenAI account"
-        }
-      }
+      "position": [
+        11856,
+        992
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Monta o e-mail de alerta e os dados para registro no histórico\nconst gptRaw = $input.first().json.message?.content || '{}';\nlet analise = {};\ntry {\n  analise = JSON.parse(gptRaw.replace(/```json|```/g, '').trim());\n} catch(e) {\n  analise = { sentimento: 'INDISPONÍVEL', confianca: 0, resumo_noticias: gptRaw.substring(0, 300), correlacao_preco: '', principais_fatores: [] };\n}\n\nconst prev = $('Preparar Prompt de Análise').item.json;\nconst ticker = prev.ticker;\nconst variacaoPerc = prev.variacao_perc;\nconst precoAtual = prev.preco_atual;\nconst precoRef = prev.preco_ref;\nconst sinal = prev.sinal;\nconst timestamp = prev.timestamp;\n\nconst sentimentoCor = {\n  POSITIVO: '#27ae60',\n  NEUTRO: '#f39c12',\n  NEGATIVO: '#e74c3c',\n  INDISPONÍVEL: '#95a5a6'\n};\n\nconst sentimentoEmoji = {\n  POSITIVO: '🟢',\n  NEUTRO: '🟡',\n  NEGATIVO: '🔴',\n  INDISPONÍVEL: '⚪'\n};\n\nconst cor = sentimentoCor[analise.sentimento] || '#95a5a6';\nconst emoji = sentimentoEmoji[analise.sentimento] || '⚪';\nconst varSign = variacaoPerc > 0 ? '+' : '';\nconst fatores = (analise.principais_fatores || []).map(f => `<li>${f}</li>`).join('');\n\nconst dataFormatada = new Date(timestamp).toLocaleDateString('pt-BR', {\n  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'\n});\n\nconst corpoEmail = `\n<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;\">\n  <div style=\"background:#1a1a2e;padding:20px 24px;border-radius:8px 8px 0 0;\">\n    <h2 style=\"color:#fff;margin:0;font-size:20px;\">📊 Alerta de Ação — ${ticker}</h2>\n    <p style=\"color:#aaa;margin:4px 0 0;font-size:12px;\">${dataFormatada}</p>\n  </div>\n  <div style=\"background:#fff;border:1px solid #e0e0e0;border-top:none;padding:24px;border-radius:0 0 8px 8px;\">\n    \n    <table style=\"width:100%;border-collapse:collapse;margin-bottom:20px;\">\n      <tr>\n        <td style=\"padding:10px;background:#f8f9fa;border-radius:6px;text-align:center;\">\n          <div style=\"font-size:28px;font-weight:bold;color:#1a1a2e;\">${ticker}</div>\n          <div style=\"font-size:12px;color:#666;\">Ticker</div>\n        </td>\n        <td style=\"width:16px;\"></td>\n        <td style=\"padding:10px;background:#f8f9fa;border-radius:6px;text-align:center;\">\n          <div style=\"font-size:24px;font-weight:bold;color:#1a1a2e;\">R$ ${precoAtual}</div>\n          <div style=\"font-size:12px;color:#666;\">Preço Atual</div>\n        </td>\n        <td style=\"width:16px;\"></td>\n        <td style=\"padding:10px;background:${cor}15;border:1.5px solid ${cor};border-radius:6px;text-align:center;\">\n          <div style=\"font-size:24px;font-weight:bold;color:${cor};\">${sinal} ${varSign}${variacaoPerc}%</div>\n          <div style=\"font-size:12px;color:#666;\">Variação vs Ref. (R$ ${precoRef})</div>\n        </td>\n      </tr>\n    </table>\n\n    <div style=\"background:${cor}10;border-left:4px solid ${cor};padding:14px 16px;border-radius:0 6px 6px 0;margin-bottom:20px;\">\n      <div style=\"font-size:14px;font-weight:bold;color:${cor};margin-bottom:4px;\">${emoji} Sentimento: ${analise.sentimento} — Confiança: ${analise.confianca}%</div>\n      <p style=\"margin:0;font-size:13px;color:#333;\">${analise.correlacao_preco || ''}</p>\n    </div>\n\n    <h3 style=\"font-size:14px;color:#333;margin-bottom:8px;\">📰 Resumo das Notícias</h3>\n    <p style=\"font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;\">${analise.resumo_noticias || 'Sem notícias disponíveis.'}</p>\n\n    ${fatores ? `<h3 style=\"font-size:14px;color:#333;margin-bottom:8px;\">🔑 Principais Fatores</h3><ul style=\"font-size:13px;color:#555;line-height:1.8;padding-left:20px;\">${fatores}</ul>` : ''}\n\n    <hr style=\"border:none;border-top:1px solid #eee;margin:20px 0;\"/>\n    <p style=\"font-size:11px;color:#aaa;margin:0;\">Gerado automaticamente pelo seu workflow n8n ⚡ — Não constitui recomendação de investimento.</p>\n  </div>\n</div>`;\n\nconst dataHoje = new Date(timestamp).toLocaleDateString('pt-BR');\nconst horaAgora = new Date(timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });\n\nreturn [{\n  json: {\n    ticker,\n    variacao_perc: variacaoPerc,\n    preco_atual: precoAtual,\n    preco_ref: precoRef,\n    sentimento: analise.sentimento,\n    confianca: analise.confianca,\n    resumo_noticias: analise.resumo_noticias,\n    correlacao_preco: analise.correlacao_preco,\n    principais_fatores: (analise.principais_fatores || []).join(' | '),\n    data: dataHoje,\n    hora: horaAgora,\n    email_assunto: `${sinal} ALERTA: ${ticker} ${varSign}${variacaoPerc}% — Sentimento ${analise.sentimento}`,\n    email_corpo: corpoEmail\n  }\n}];"
       },
-      "id": "a1000010-0010-0010-0010-000000000010",
+      "id": "b1046c47-97e8-461e-8780-a23f32c8250d",
       "name": "Formatar Alerta e E-mail",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2500, 150]
+      "position": [
+        12352,
+        992
+      ]
     },
     {
       "parameters": {
         "sendTo": "r9drig@gmail.com",
         "subject": "={{ $json.email_assunto }}",
-        "emailType": "html",
         "message": "={{ $json.email_corpo }}",
         "options": {}
       },
-      "id": "a1000011-0011-0011-0011-000000000011",
+      "id": "7562fe46-bfab-45b5-9d83-7b0b883c4d4e",
       "name": "Enviar Alerta por Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [2750, 150],
+      "position": [
+        12608,
+        992
+      ],
+      "webhookId": "f8c7b539-f837-4d6f-84a1-4e086fc354a7",
       "credentials": {
         "gmailOAuth2": {
-          "id": "CREDENTIAL_ID",
-          "name": "Gmail account"
+          "id": "MgA1TSa29q0PrUQP",
+          "name": "Gmail OAuth2 API"
         }
       }
     },
@@ -198,42 +168,40 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "ID_DA_PLANILHA",
-          "mode": "id"
+          "value": "16Pk6aoYv87kVPZ9r4ej8E4QDrWHneYyh3U8oGZ5H814",
+          "mode": "list",
+          "cachedResultName": "dados_de_vendas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16Pk6aoYv87kVPZ9r4ej8E4QDrWHneYyh3U8oGZ5H814/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "Histórico de Alertas",
+          "value": 404433762,
           "mode": "list",
-          "cachedResultName": "Histórico de Alertas"
+          "cachedResultName": "Histórico de Alertas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16Pk6aoYv87kVPZ9r4ej8E4QDrWHneYyh3U8oGZ5H814/edit#gid=404433762"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Data": "={{ $json.data }}",
-            "Hora": "={{ $json.hora }}",
-            "Ticker": "={{ $json.ticker }}",
-            "Preço Referência": "={{ $json.preco_ref }}",
-            "Preço Atual": "={{ $json.preco_atual }}",
-            "Variação (%)": "={{ $json.variacao_perc }}",
-            "Sentimento IA": "={{ $json.sentimento }}",
-            "Confiança (%)": "={{ $json.confianca }}",
-            "Resumo Notícias": "={{ $json.resumo_noticias }}",
-            "Correlação Preço": "={{ $json.correlacao_preco }}",
-            "Principais Fatores": "={{ $json.principais_fatores }}"
-          }
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
-      "id": "a1000012-0012-0012-0012-000000000012",
+      "id": "099cffc8-857a-468b-ab39-6aceb91855ce",
       "name": "Registrar Histórico no Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [3000, 150],
+      "position": [
+        12864,
+        992
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "CREDENTIAL_ID",
-          "name": "Google Sheets account"
+          "id": "jLcskVFTqXoBizhs",
+          "name": "Google Sheets OAuth2 API"
         }
       }
     },
@@ -241,13 +209,92 @@
       "parameters": {
         "jsCode": "// Ação sem variação relevante — apenas registra sem enviar e-mail\nconst item = $input.first();\nconst ticker = item.json.ticker;\nconst variacaoPerc = item.json.variacao_perc;\nconst precoAtual = item.json.preco_atual;\nconst sinal = item.json.sinal;\n\nconsole.log(`[SEM ALERTA] ${ticker} — variação de ${variacaoPerc}% está dentro do limite de ±3%. Nenhum alerta enviado.`);\n\nreturn [{\n  json: {\n    status: 'sem_alerta',\n    ticker,\n    variacao_perc: variacaoPerc,\n    preco_atual: precoAtual,\n    mensagem: `${ticker} com variação de ${variacaoPerc}% está dentro do limite (±3%). Monitoramento normal.`\n  }\n}];"
       },
-      "id": "a1000013-0013-0013-0013-000000000013",
+      "id": "66b6ae3b-74dc-4081-a4ec-c16ff77085fc",
       "name": "Sem Alerta — Variação Normal",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1750, 450]
+      "position": [
+        11600,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        10608,
+        1152
+      ],
+      "id": "564f3310-df2f-4e32-a7d0-7aeebf02f333",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "=https://serpapi.com/search.json?q={{ $json.ticker.split('.')[0] }}+acoes+bolsa&tbm=nws&hl=pt&gl=br&api_key=2c3f87e768ce8906ded614af782750072d91e9d9ec2a96faef0f3d8946a327d2",
+        "options": {}
+      },
+      "id": "80a20089-7d8d-4845-9578-c540e17df61d",
+      "name": "Buscar Notícias (serpapi)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        11600,
+        992
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        12352,
+        1424
+      ],
+      "id": "05bac51f-12f1-405a-8797-51c80fdf33db",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Você é um jornalista. Responda SOMENTE neste formato:\\n\\n*TÍTULO:* [título]\\n*RESUMO:* [3 linhas]\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"={{ 'Analise: ' + $json.textContent }}\"\n    }\n  ],\n  \"temperature\": 0.4\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        12096,
+        992
+      ],
+      "id": "0f09e160-1c82-48b9-85f1-dc98ec8728f8",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ldZeLlF41Unlaple",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        11904,
+        1344
+      ],
+      "id": "9a11eb51-8243-4ba1-9d36-02395f52d05b",
+      "name": "Merge"
     }
   ],
+  "pinData": {},
   "connections": {
     "19h Dias Úteis (Seg-Sex)": {
       "main": [
@@ -264,18 +311,7 @@
       "main": [
         [
           {
-            "node": "Loop por Ticker",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop por Ticker": {
-      "main": [
-        [
-          {
-            "node": "Buscar Cotação Alpha Vantage",
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -308,7 +344,7 @@
       "main": [
         [
           {
-            "node": "Buscar Notícias (NewsAPI)",
+            "node": "Buscar Notícias (serpapi)",
             "type": "main",
             "index": 0
           }
@@ -322,33 +358,11 @@
         ]
       ]
     },
-    "Buscar Notícias (NewsAPI)": {
-      "main": [
-        [
-          {
-            "node": "Preparar Prompt de Análise",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Preparar Prompt de Análise": {
       "main": [
         [
           {
-            "node": "ChatGPT — Análise de Sentimento",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ChatGPT — Análise de Sentimento": {
-      "main": [
-        [
-          {
-            "node": "Formatar Alerta e E-mail",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -376,15 +390,96 @@
           }
         ]
       ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Buscar Cotação Alpha Vantage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Notícias (serpapi)": {
+      "main": [
+        [
+          {
+            "node": "Preparar Prompt de Análise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sem Alerta — Variação Normal": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Histórico no Sheets": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Formatar Alerta e E-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   },
-  "versionId": "1",
+  "versionId": "cd364267-11f5-4094-8379-d1a2b8af096c",
   "meta": {
-    "instanceId": ""
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6962804f967a5fed0bb02f5edf2394ac81750d5cd0d9875da07773acc82071fd"
   },
-  "tags": ["acoes", "bolsa", "alertas", "chatgpt", "analise-sentimento", "alpha-vantage"]
+  "id": "PRoNPPKPbXzL7Zcx",
+  "tags": []
 }

@@ -1,6 +1,6 @@
-# 📧 n8n Workflow — Resumo de Notícias por E-mail
+# 📧 n8n Workflow — Alerta de Ações com IA + Gmail
 
-> Workflow n8n que resume notícias diariamente com ChatGPT (GPT-4o) e envia por e-mail via Gmail.  
+> Workflow n8n que monitora ações da B3, detecta variações relevantes, busca notícias via SerpAPI, analisa sentimento com Groq LLaMA 3.3 (gratuito) e envia alertas por e-mail via Gmail.  
 > Desenvolvido por **Rodrigo Salgado** — Analista de Dados & IA em transição para Engenheiro de Dados.
 
 ---
@@ -9,22 +9,28 @@
 
 | # | Workflow | Descrição | Tecnologias |
 |---|----------|-----------|-------------|
-| 01 | [Resumo de Notícias por E-mail](./workflows/01-resumo-noticias-email/) | Acessa lista de sites, resume com ChatGPT e envia e-mail HTML diariamente ao meio-dia | Schedule · HTTP Request · ChatGPT GPT-4o · Gmail |
+| 01 | [Alerta de Ações com IA](./workflows/01-resumo-noticias-email/) | Monitora cotações da B3, detecta variações ±3%, busca notícias e envia alerta com análise de sentimento por e-mail | Alpha Vantage · SerpAPI · Groq LLaMA · Gmail · Google Sheets |
 
 ---
 
 ## 🔁 Fluxo
 
 ```
-⏰ Schedule (12h)
-    └─▶ 📋 Lista de Links
-            └─▶ 🔀 Separar Links
-                    └─▶ 🌐 HTTP Request (busca HTML)
-                            └─▶ 🧹 Limpar HTML
-                                    └─▶ 🤖 ChatGPT GPT-4o
-                                            └─▶ 📝 Formatar Resultado
-                                                    └─▶ 📧 Montar E-mail
-                                                            └─▶ 📤 Gmail
+⏰ Schedule (19h Seg–Sex)
+    └─▶ 📊 Ler Tickers (Google Sheets)
+            └─▶ 🔁 Loop por Ticker
+                    └─▶ 📈 Buscar Cotação (Alpha Vantage)
+                            └─▶ 🧮 Calcular Variação %
+                                    └─▶ ⚖️ Variação > ±3%?
+                                           │
+                                    ✅ SIM └─▶ 📰 Buscar Notícias (SerpAPI)
+                                                    └─▶ ✏️ Preparar Prompt
+                                                            └─▶ 🦙 Groq LLaMA 3.3 (gratuito)
+                                                                    └─▶ 📋 Formatar Alerta
+                                                                            └─▶ 📤 Gmail
+                                                                                    └─▶ 📁 Histórico (Sheets)
+                                           │
+                                    ❌ NÃO └─▶ 😴 Sem Alerta
 ```
 
 ---
@@ -35,30 +41,19 @@
 
 | Credencial | Como obter | Custo |
 |---|---|---|
-| **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/api-keys) | Pago por uso |
+| **Alpha Vantage API Key** | [alphavantage.co](https://www.alphavantage.co/support/#api-key) | ✅ 25 req/dia grátis |
+| **SerpAPI Key** | [serpapi.com](https://serpapi.com/) | ✅ 100 req/mês grátis |
+| **Groq API Key** | [console.groq.com/keys](https://console.groq.com/keys) | ✅ 100% gratuito |
 | **Gmail OAuth2** | n8n → Credentials → Gmail OAuth2 | ✅ Gratuito |
+| **Google Sheets OAuth2** | n8n → Credentials → Google Sheets | ✅ Gratuito |
 
-### Personalizar os links
-No node **"Lista de Links"**, edite o array com seus sites:
-```json
-["https://www.bbc.com/portuguese", "https://g1.globo.com", "https://tecnoblog.net"]
-```
+### Planilha Google Sheets — aba `Tickers`
 
-### Destinatário
-No node **"Enviar E-mail Gmail"**, altere o campo `sendTo` para seu e-mail.
-
----
-
-## 📧 Exemplo de E-mail Gerado
-
-```
-📰 Resumo de Notícias — quinta-feira, 15 de maio de 2026
-
-🔗 Fonte: g1.globo.com
-
-TÍTULO: Banco Central mantém Selic em 10,5%
-RESUMO: O Comitê de Política Monetária...
-```
+| ticker | preco_referencia |
+|--------|-----------------|
+| PETR4.SAO | 38.50 |
+| VALE3.SAO | 68.20 |
+| ITUB4.SAO | 32.00 |
 
 ---
 
@@ -84,5 +79,7 @@ Analista de Power BI, Dados & IA | Em transição para Engenheiro de Dados & IA
 [![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white)](https://github.com/r9drig-tech)
 
 ---
+
+⚠️ **Aviso:** Os workflows de análise financeira são para fins educacionais. Não constituem recomendação de investimento.
 
 ⭐ Se este repositório foi útil, deixe uma estrela!
