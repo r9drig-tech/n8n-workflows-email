@@ -1,0 +1,275 @@
+{
+  "name": "Resumo Diário de Notícias com ChatGPT",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24,
+              "triggerAtHour": 12,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Todo dia ao meio-dia",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1a2b3c4-d5e6-7890-abcd-111111111111",
+              "name": "links",
+              "value": "=[\"https://www.bbc.com/portuguese\", \"https://g1.globo.com\", \"https://tecnoblog.net\"]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Lista de Links",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transforma o array de links em itens separados\nconst links = $input.first().json.links;\n\nreturn links.map(link => ({\n  json: { url: link }\n}));"
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Separar Links",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+      "name": "Buscar Conteúdo da Página",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Limpa o HTML e deixa só o texto puro para enviar ao ChatGPT\nconst items = $input.all();\n\nreturn items.map(item => {\n  const rawHtml = item.json.data || '';\n  const url = $('Separar Links').item.json.url || '';\n\n  // Remove tags HTML\n  const textOnly = rawHtml\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .substring(0, 3000); // Limita para não estourar contexto\n\n  return {\n    json: {\n      url: url,\n      textContent: textOnly\n    }\n  };\n});"
+      },
+      "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+      "name": "Limpar HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "complete",
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Você é um jornalista experiente. Sua tarefa é analisar o conteúdo de uma página de notícias e gerar um resumo claro e objetivo. Responda SOMENTE no seguinte formato:\n\n**TÍTULO:** [título da principal notícia]\n**RESUMO:** [3 linhas resumindo o conteúdo principal da página]\n\nNão adicione nenhum texto fora desse formato."
+            },
+            {
+              "role": "user",
+              "content": "=Analise o conteúdo abaixo extraído da URL {{ $json.url }} e gere o resumo no formato solicitado:\n\n{{ $json.textContent }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+      "name": "ChatGPT - Resumir Notícia",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [1500, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+              "name": "url",
+              "value": "={{ $('Limpar HTML').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "b8c9d0e1-f2a3-4567-bcde-678901234567",
+              "name": "resumo",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7b8c9d0-e1f2-3456-abcd-000000000001",
+      "name": "Formatar Resultado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1750, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agrega todos os resumos em um único e-mail\nconst items = $input.all();\nconst dataHoje = new Date().toLocaleDateString('pt-BR', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\nlet corpoEmail = `<h2 style=\"font-family:Arial;color:#2c3e50;\">📰 Resumo de Notícias — ${dataHoje}</h2><hr/>`;\n\nitems.forEach((item, index) => {\n  const url = item.json.url || '';\n  const resumo = item.json.resumo || '';\n\n  corpoEmail += `\n    <div style=\"margin-bottom:28px;font-family:Arial;\">\n      <p style=\"font-size:12px;color:#888;\">🔗 Fonte: <a href=\"${url}\">${url}</a></p>\n      <div style=\"background:#f8f9fa;border-left:4px solid #3498db;padding:12px 16px;border-radius:4px;\">\n        ${resumo.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>').replace(/\\n/g, '<br/>')}\n      </div>\n    </div>\n  `;\n});\n\ncorpoEmail += `<hr/><p style=\"font-family:Arial;font-size:11px;color:#aaa;\">Gerado automaticamente pelo seu workflow n8n ⚡</p>`;\n\nreturn [{\n  json: {\n    assunto: `📰 Resumo de Notícias — ${dataHoje}`,\n    corpo: corpoEmail\n  }\n}];"
+      },
+      "id": "c9d0e1f2-a3b4-5678-cdef-789012345678",
+      "name": "Montar E-mail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "r9drig@gmail.com",
+        "subject": "={{ $json.assunto }}",
+        "emailType": "html",
+        "message": "={{ $json.corpo }}",
+        "options": {}
+      },
+      "id": "d0e1f2a3-b4c5-6789-defa-890123456789",
+      "name": "Enviar E-mail Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [2250, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Todo dia ao meio-dia": {
+      "main": [
+        [
+          {
+            "node": "Lista de Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista de Links": {
+      "main": [
+        [
+          {
+            "node": "Separar Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar Links": {
+      "main": [
+        [
+          {
+            "node": "Buscar Conteúdo da Página",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Conteúdo da Página": {
+      "main": [
+        [
+          {
+            "node": "Limpar HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpar HTML": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT - Resumir Notícia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT - Resumir Notícia": {
+      "main": [
+        [
+          {
+            "node": "Formatar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Montar E-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar E-mail": {
+      "main": [
+        [
+          {
+            "node": "Enviar E-mail Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": ""
+  },
+  "tags": ["noticias", "chatgpt", "email", "automacao"]
+}
